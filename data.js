@@ -1,0 +1,60 @@
+const funds = [
+    {
+      id: "SPY",
+      name: "SPDR S&P 500 ETF Trust",
+      type: "Traditional ETF",
+      description: "Tracks the S&P 500 index. The most widely held ETF in the world and the standard benchmark for US equity performance.",
+      ter: 0.0009,
+      managementFee: 0.0009,
+      performanceFee: 0,
+      hurdleRate: 0,
+      hurdleType: null,
+      highWaterMark: true,
+      catchUp: false,
+      isAlt: false
+    },
+    {
+      id: "DIA",
+      name: "SPDR Dow Jones Industrial Average ETF",
+      type: "Traditional ETF",
+      description: "Tracks the Dow Jones Industrial Average — 30 large-cap US companies. A narrower, price-weighted index compared to the S&P 500.",
+      ter: 0.0016,
+      managementFee: 0.0016,
+      performanceFee: 0,
+      hurdleRate: 0,
+      hurdleType: null,
+      highWaterMark: true,
+      catchUp: false,
+      isAlt: false
+    },
+    {
+      id: "BXPE",
+      name: "Blackstone Private Equity Strategies Fund",
+      type: "Private Equity Evergreen",
+      description: "A retail-accessible private equity fund from Blackstone, one of the world's largest alternative asset managers. Invests across global buyouts, growth equity, secondaries, and special situations.",
+      ter: null,
+      managementFee: 0.022,
+      performanceFee: 0.125,
+      hurdleRate: 0.05,
+      hurdleType: "soft",
+      highWaterMark: true,
+      catchUp: true,
+      catchUpRate: 1.0,
+      isAlt: true
+    },
+    {
+      id: "AQR",
+      name: "AQR Style Premia Alternative Fund",
+      type: "Liquid Alternatives — Quantitative",
+      description: "A systematic, quantitative alternatives fund from AQR Capital Management. Seeks returns from well-established risk premia across asset classes and geographies, largely uncorrelated to traditional markets.",
+      ter: null,
+      managementFee: 0.015,
+      performanceFee: 0.20,
+      hurdleRate: 0.08,
+      hurdleType: "hard",
+      highWaterMark: true,
+      catchUp: false,
+      catchUpRate: 0,
+      isAlt: true
+    }
+  ];

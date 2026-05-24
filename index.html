@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Alts Fee Analyser</title>
+  <script src="data.js"></script>
+  <script src="engine.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #1a1d2e;
+      border-bottom: 1px solid #2d3148;
+      padding: 28px 40px;
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.3px;
+    }
+
+    header p {
+      margin-top: 6px;
+      color: #8892a4;
+      font-size: 0.9rem;
+      max-width: 600px;
+      line-height: 1.5;
+    }
+
+    .illustrative-banner {
+      background: #1e2235;
+      border-left: 3px solid #4a6fa5;
+      padding: 10px 40px;
+      font-size: 0.8rem;
+      color: #8892a4;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 36px 40px;
+    }
+
+    .input-section {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .input-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 20px;
+    }
+
+    .input-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .input-group label {
+      font-size: 0.8rem;
+      color: #8892a4;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .input-group input {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      color: #ffffff;
+      font-size: 1rem;
+      padding: 10px 14px;
+      width: 200px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-group input:focus {
+      border-color: #4a6fa5;
+    }
+
+    .run-btn {
+      background: #4a6fa5;
+      border: none;
+      border-radius: 6px;
+      color: #ffffff;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 28px;
+      margin-top: 20px;
+      transition: background 0.2s;
+    }
+
+    .run-btn:hover { background: #3d5d8f; }
+
+    .funds-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-bottom: 32px;
+    }
+
+    .fund-card {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .fund-card.alt { border-left: 3px solid #4a6fa5; }
+    .fund-card.traditional { border-left: 3px solid #2d3148; }
+
+    .fund-card .fund-id {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .fund-card .fund-type {
+      font-size: 0.75rem;
+      color: #8892a4;
+      margin-top: 2px;
+      margin-bottom: 10px;
+    }
+
+    .fund-card .fund-desc {
+      font-size: 0.8rem;
+      color: #a0aab8;
+      line-height: 1.5;
+      margin-bottom: 12px;
+    }
+
+    .fee-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .fee-tag {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      color: #8892a4;
+      padding: 3px 8px;
+    }
+
+    .results-section { margin-bottom: 32px; }
+
+    .results-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    .results-table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    th {
+      background: #1a1d2e;
+      color: #8892a4;
+      font-weight: 600;
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #2d3148;
+      white-space: nowrap;
+    }
+
+    td {
+      padding: 12px 16px;
+      border-bottom: 1px solid #1a1d2e;
+      vertical-align: top;
+    }
+
+    tr:hover td { background: #1a1d2e; }
+
+    .scenario-label {
+      font-weight: 600;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .return-positive { color: #4ade80; font-weight: 600; }
+    .return-negative { color: #f87171; font-weight: 600; }
+    .return-neutral  { color: #facc15; font-weight: 600; }
+
+    .cell-nav { color: #e2e8f0; font-size: 0.9rem; }
+    .cell-fees { color: #8892a4; font-size: 0.78rem; margin-top: 2px; }
+
+    .outperform { background: rgba(74, 222, 128, 0.06); }
+    .underperform { background: rgba(248, 113, 113, 0.06); }
+
+    .detail-section {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 28px;
+      margin-bottom: 32px;
+    }
+
+    .detail-section h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .detail-section .subtitle {
+      font-size: 0.82rem;
+      color: #8892a4;
+      margin-bottom: 20px;
+    }
+
+    .scenario-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .tab-btn {
+      background: #0f1117;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      color: #8892a4;
+      cursor: pointer;
+      font-size: 0.82rem;
+      padding: 7px 14px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background: #4a6fa5;
+      border-color: #4a6fa5;
+      color: #ffffff;
+    }
+
+    .fund-tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+    }
+
+    .year-breakdown {
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    .year-breakdown table th { background: #0f1117; }
+
+    .explanations {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .explanation-item {
+      background: #0f1117;
+      border-left: 3px solid #4a6fa5;
+      border-radius: 0 6px 6px 0;
+      font-size: 0.85rem;
+      color: #a0aab8;
+      line-height: 1.6;
+      padding: 12px 16px;
+    }
+
+    .glossary {
+      background: #1a1d2e;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 28px;
+    }
+
+    .glossary h2 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 16px;
+    }
+
+    .glossary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 14px;
+    }
+
+    .glossary-item {
+      background: #0f1117;
+      border-radius: 6px;
+      padding: 14px;
+    }
+
+    .glossary-item dt {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #4a6fa5;
+      margin-bottom: 4px;
+    }
+
+    .glossary-item dd {
+      font-size: 0.8rem;
+      color: #8892a4;
+      line-height: 1.5;
+    }
+
+    .hidden { display: none; }
+
+    @media (max-width: 600px) {
+      header { padding: 20px; }
+      .container { padding: 20px; }
+      .input-group input { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Alts Fee Analyser</h1>
+  <p>Model the true net cost of alternative fund fee structures across performance scenarios — and evaluate whether the fees are justified by the returns.</p>
+</header>
+
+<div class="illustrative-banner">
+  For illustrative purposes only. This tool is not financial advice. Return scenarios are hypothetical. Consult a qualified financial adviser before making any investment decision.
+</div>
+
+<div class="container">
+
+  <!-- Fund Cards -->
+  <div class="funds-grid" id="fundCards"></div>
+
+  <!-- Input -->
+  <div class="input-section">
+    <h2>Run the Analysis</h2>
+    <div class="input-row">
+      <div class="input-group">
+        <label>Notional Investment (USD)</label>
+        <input type="number" id="navInput" value="100000" min="1000" step="1000" />
+      </div>
+    </div>
+    <button class="run-btn" onclick="runAnalysis()">Analyse</button>
+  </div>
+
+  <!-- Results Table -->
+  <div class="results-section hidden" id="resultsSection">
+    <h2>Scenario Results — Net of All Fees</h2>
+    <div class="results-table-wrap">
+      <table id="resultsTable"></table>
+    </div>
+  </div>
+
+  <!-- Fee Breakdown -->
+  <div class="detail-section hidden" id="detailSection">
+    <h2>Fee Breakdown</h2>
+    <p class="subtitle">Select a scenario and fund to see a year-by-year breakdown and explanation of which fee mechanics fired.</p>
+    <div class="scenario-tabs" id="scenarioTabs"></div>
+    <div class="fund-tabs" id="fundTabs"></div>
+    <div class="year-breakdown" id="yearBreakdown"></div>
+    <div class="explanations" id="explanations"></div>
+  </div>
+
+  <!-- Glossary -->
+  <div class="glossary">
+    <h2>Fee Mechanics — Glossary</h2>
+    <dl class="glossary-grid">
+      <div class="glossary-item">
+        <dt>TER — Total Expense Ratio</dt>
+        <dd>The flat annual fee charged by a traditional ETF, expressed as a percentage of assets. Deducted regardless of performance. Typically very low (under 0.20%).</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Management Fee</dt>
+        <dd>The annual fee charged by an alternatives fund manager. Applied to opening NAV at the start of each year — the investor does not earn returns on this amount.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Performance Fee</dt>
+        <dd>A fee charged only when the fund generates returns above a defined threshold. Designed to align the manager's incentives with investor outcomes.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Hurdle Rate</dt>
+        <dd>The minimum return the fund must achieve before a performance fee applies. Protects investors from paying incentive fees on ordinary returns.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Soft Hurdle</dt>
+        <dd>Once the hurdle is cleared, the performance fee applies to all gains above the high-water mark — not just the excess above the hurdle. More favourable to the manager.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Hard Hurdle</dt>
+        <dd>The performance fee applies only to gains above the hurdle amount. The manager earns nothing on the hurdle portion of returns. More favourable to the investor.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>High-Water Mark (HWM)</dt>
+        <dd>The highest NAV the fund has previously reached. Performance fees can only be charged on gains above this level — protecting investors from paying twice on the same ground.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Catch-Up Clause</dt>
+        <dd>After the investor receives their preferred return (hurdle), the manager receives a disproportionate share of subsequent profits until they hold their target percentage of total profits.</dd>
+      </div>
+      <div class="glossary-item">
+        <dt>Core / Satellite</dt>
+        <dd>A portfolio construction approach where a low-cost index core (e.g. SPY) anchors the portfolio, and alternative funds serve as satellite positions seeking differentiated returns.</dd>
+      </div>
+    </dl>
+  </div>
+
+</div>
+
+<script>
+  // State
+  let activeScenario = 'bear';
+  let activeFund = 'SPY';
+  let lastNAV = 100000;
+  let lastResults = {};
+
+  const scenarioList = [
+    { id: 'bear',          label: 'Bear (-10%)',         returns: [-0.10] },
+    { id: 'base',          label: 'Base (+10%)',          returns: [0.10]  },
+    { id: 'bull',          label: 'Bull (+22%)',          returns: [0.22]  },
+    { id: 'multi',         label: 'Multi-Year (+25% recovery)',   returns: [-0.08, -0.08, -0.03, 0.25] },
+    { id: 'multiExtended', label: 'Multi-Year (+50% recovery)',   returns: [-0.08, -0.08, -0.03, 0.50] }
+  ];
+
+  // Render fund cards
+  function renderFundCards() {
+    const container = document.getElementById('fundCards');
+    container.innerHTML = funds.map(f => `
+      <div class="fund-card ${f.isAlt ? 'alt' : 'traditional'}">
+        <div class="fund-id">${f.id}</div>
+        <div class="fund-type">${f.type}</div>
+        <div class="fund-desc">${f.description}</div>
+        <div class="fee-tags">
+          ${f.isAlt
+            ? `<span class="fee-tag">Mgmt: ${(f.managementFee * 100).toFixed(2)}%</span>
+               <span class="fee-tag">Perf: ${(f.performanceFee * 100).toFixed(0)}%</span>
+               <span class="fee-tag">Hurdle: ${(f.hurdleRate * 100).toFixed(0)}% ${f.hurdleType}</span>
+               <span class="fee-tag">HWM: Yes</span>
+               <span class="fee-tag">Catch-up: ${f.catchUp ? 'Full' : 'None'}</span>`
+            : `<span class="fee-tag">TER: ${(f.managementFee * 100).toFixed(2)}%</span>
+               <span class="fee-tag">No performance fee</span>`
+          }
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // Run full analysis
+  function runAnalysis() {
+    const nav = parseFloat(document.getElementById('navInput').value);
+    if (!nav || nav < 1000) { alert('Please enter a valid investment amount (minimum $1,000).'); return; }
+    lastNAV = nav;
+    lastResults = {};
+
+    // Run all scenarios for all funds
+    funds.forEach(fund => {
+      lastResults[fund.id] = {};
+      scenarioList.forEach(scenario => {
+        lastResults[fund.id][scenario.id] = runMultiYearSequence(fund, nav, scenario.returns);
+      });
+    });
+
+    renderResultsTable();
+    renderDetailSection();
+    document.getElementById('resultsSection').classList.remove('hidden');
+    document.getElementById('detailSection').classList.remove('hidden');
+    document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth' });
+  }
+
+  // Results table
+  function renderResultsTable() {
+    const spyResults = lastResults['SPY'];
+    let html = `<thead><tr><th>Scenario</th>${funds.map(f => `<th>${f.id}<br><span style="font-weight:400;color:#606878">${f.type}</span></th>`).join('')}</tr></thead><tbody>`;
+
+    scenarioList.forEach(scenario => {
+      html += `<tr><td class="scenario-label">${scenario.label}</td>`;
+      funds.forEach(fund => {
+        const r = lastResults[fund.id][scenario.id];
+        const netReturn = r.totalNetReturn;
+        const spyReturn = spyResults[scenario.id].totalNetReturn;
+        const isAlt = fund.isAlt;
+        const cls = isAlt ? (netReturn >= spyReturn ? 'outperform' : 'underperform') : '';
+        const returnCls = netReturn > 0.001 ? 'return-positive' : netReturn < -0.001 ? 'return-negative' : 'return-neutral';
+        html += `<td class="${cls}">
+          <div class="cell-nav ${returnCls}">${fmt(r.finalNAV)}</div>
+          <div class="cell-nav ${returnCls}">${pct(netReturn)}</div>
+          <div class="cell-fees">Fees: ${fmt(r.totalFeesPaid)}</div>
+        </td>`;
+      });
+      html += '</tr>';
+    });
+
+    html += '</tbody>';
+    document.getElementById('resultsTable').innerHTML = html;
+  }
+
+  // Detail section
+  function renderDetailSection() {
+    // Scenario tabs
+    const stabs = document.getElementById('scenarioTabs');
+    stabs.innerHTML = scenarioList.map(s => `
+      <button class="tab-btn ${s.id === activeScenario ? 'active' : ''}"
+        onclick="setScenario('${s.id}')">${s.label}</button>
+    `).join('');
+
+    // Fund tabs
+    const ftabs = document.getElementById('fundTabs');
+    ftabs.innerHTML = funds.map(f => `
+      <button class="tab-btn ${f.id === activeFund ? 'active' : ''}"
+        onclick="setFund('${f.id}')">${f.id}</button>
+    `).join('');
+
+    renderBreakdown();
+  }
+
+  function setScenario(id) {
+    activeScenario = id;
+    renderDetailSection();
+  }
+
+  function setFund(id) {
+    activeFund = id;
+    renderDetailSection();
+  }
+
+  function renderBreakdown() {
+    const r = lastResults[activeFund][activeScenario];
+    const rows = r.yearlyResults;
+
+    // Year-by-year table
+    let html = `<table>
+      <thead><tr>
+        <th>Year</th>
+        <th>Opening NAV</th>
+        <th>Mgmt Fee</th>
+        <th>Gross Return</th>
+        <th>Gross Ending NAV</th>
+        <th>Perf Fee</th>
+        <th>Net Ending NAV</th>
+        <th>High-Water Mark</th>
+      </tr></thead><tbody>`;
+
+    rows.forEach(row => {
+      const retCls = row.grossReturn > 0 ? 'return-positive' : 'return-negative';
+      html += `<tr>
+        <td>${row.year}</td>
+        <td>${fmt(row.openingNAV)}</td>
+        <td style="color:#f87171">${fmt(row.managementFeeAmount)}</td>
+        <td class="${retCls}">${pct(row.grossReturn)}</td>
+        <td>${fmt(row.grossEndingNAV)}</td>
+        <td style="color:${row.performanceFeeAmount > 0 ? '#f87171' : '#8892a4'}">${fmt(row.performanceFeeAmount)}</td>
+        <td><strong>${fmt(row.netEndingNAV)}</strong></td>
+        <td style="color:#8892a4">${fmt(row.newHWM)}</td>
+      </tr>`;
+    });
+
+    // Summary row
+    html += `<tr style="border-top:2px solid #2d3148">
+      <td colspan="5" style="color:#8892a4;font-size:0.8rem">Total fees paid</td>
+      <td colspan="3" style="color:#f87171;font-weight:700">${fmt(r.totalFeesPaid)}</td>
+    </tr></tbody></table>`;
+
+    document.getElementById('yearBreakdown').innerHTML = html;
+
+    // Explanations
+    const allExplanations = rows.flatMap(row => row.explanations);
+    const unique = [...new Set(allExplanations)];
+    document.getElementById('explanations').innerHTML = unique.map(e =>
+      `<div class="explanation-item">${e}</div>`
+    ).join('');
+  }
+
+  // Formatting
+  function fmt(value) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
+  }
+
+  function pct(value) {
+    return (value >= 0 ? '+' : '') + (value * 100).toFixed(1) + '%';
+  }
+
+  // Init
+  renderFundCards();
+</script>
+</body>
+</html>
